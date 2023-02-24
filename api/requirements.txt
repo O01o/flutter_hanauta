@@ -1,0 +1,6 @@
+fastapi==0.78.0
+gunicorn==20.1.0
+uvicorn==0.17.6
+numpy==1.20.3
+librosa==0.8.1
+mido==1.2.10
