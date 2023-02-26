@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:core';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_hanauta/providers/wav2midi_providers.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:file_picker/file_picker.dart';
 
 class Wav2MidiScreen extends ConsumerWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
@@ -24,10 +26,18 @@ class Wav2MidiScreen extends ConsumerWidget {
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                const Text("ファイル名: {filename}"),
+                Text("ファイル名: ${ref.watch(fileProvider).path}"),
                 ElevatedButton(
-                  child: const Text("ファイルを選択する"),
-                  onPressed: () {}
+                  child: const Text("ファイルを選択"),
+                  onPressed: () async {
+                    FilePickerResult? result = await FilePicker.platform.pickFiles(
+                      type: FileType.audio,
+                      allowedExtensions: ['mp3', 'wav']
+                    );
+                    if (result == null) return;
+
+                    ref.watch(fileProvider.notifier).state = File(result.files.single.path!);
+                  }
                 ),
                 const Spacer(),
                 Text("BPM: ${sampleRate*(60/4) / (16*ref.watch(countProvider))}"),
