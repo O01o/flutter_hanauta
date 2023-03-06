@@ -19,6 +19,7 @@ class Wav2MidiScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     const int sampleRate = 8000;
     final dio = Dio();
+    File? audioFile;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,7 +30,7 @@ class Wav2MidiScreen extends ConsumerWidget {
           SliverList(
             delegate: SliverChildListDelegate(
               [
-                Text("ファイル名: ${ref.watch(fileProvider).path}"),
+                Text("ファイル名: ${ref.watch(fileNameProvider)}"),
                 ElevatedButton(
                   child: const Text("ファイルを選択"),
                   onPressed: () async {
@@ -39,7 +40,8 @@ class Wav2MidiScreen extends ConsumerWidget {
                     );
                     if (result == null) return;
 
-                    ref.watch(fileProvider.notifier).state = File(result.files.single.path!);
+                    audioFile = File(result.files.single.path!);
+                    ref.watch(fileNameProvider.notifier).state = audioFile!.path;
                   }
                 ),
                 const Spacer(),
@@ -72,7 +74,7 @@ class Wav2MidiScreen extends ConsumerWidget {
                 ElevatedButton(
                   child: const Text("WAV→MIDI変換する"),
                   onPressed: () async {
-                    final response = await dio.get("http://127.0.0.1:8000");
+                    final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app");
                     print(response.data.toString());
                   }
                 ),
