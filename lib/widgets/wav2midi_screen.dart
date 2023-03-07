@@ -21,7 +21,9 @@ class Wav2MidiScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dio = Dio();
-    final audioPlayer = AudioPlayer();
+    final recordPlayer = AudioPlayer();
+    // final clockPlayer = AudioPlayer();
+    clockPlayer.setAsset("assets/sounds/clock_cut.wav");
 
     return Scaffold(
       appBar: AppBar(
@@ -71,6 +73,7 @@ class Wav2MidiScreen extends ConsumerWidget {
                   style: styleColorToggle(ref.watch(clockFlagProvider)),
                   onPressed: () {
                     ref.watch(clockFlagProvider.notifier).switching();
+                    // clockPlayer.seek(Duration(milliseconds: 1000 * 16 * ref.watch(countProvider) ~/ sampleRate));
                   }
                 ),
                 ElevatedButton(
