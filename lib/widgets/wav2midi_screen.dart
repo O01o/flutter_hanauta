@@ -9,17 +9,19 @@ import 'package:flutter_hanauta/providers/wav2midi_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:just_audio/just_audio.dart';
 
 class Wav2MidiScreen extends ConsumerWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
 
   final String title;
+  final int sampleRate = 8000;
   
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const int sampleRate = 8000;
     final dio = Dio();
-    File? audioFile;
+    final audioPlayer = AudioPlayer();
 
     return Scaffold(
       appBar: AppBar(
@@ -35,13 +37,11 @@ class Wav2MidiScreen extends ConsumerWidget {
                   child: const Text("ファイルを選択"),
                   onPressed: () async {
                     FilePickerResult? result = await FilePicker.platform.pickFiles(
-                      type: FileType.audio,
-                      allowedExtensions: ['mp3', 'wav']
+                      type: FileType.audio
                     );
                     if (result == null) return;
 
-                    audioFile = File(result.files.single.path!);
-                    ref.watch(fileNameProvider.notifier).state = audioFile!.path;
+                    ref.watch(fileNameProvider.notifier).state = result.files.single.path!;
                   }
                 ),
                 const Spacer(),
@@ -52,30 +52,44 @@ class Wav2MidiScreen extends ConsumerWidget {
                   onChanged: (newRate) {
                     ref.watch(countProvider.notifier).state = newRate.toInt();
                   },
-                  min: 25,
+                  min: 40,
                   max: 100,
                 ),
                 ElevatedButton(
-                  child: Text(ref.watch(acappellaFlagProvider)
-                  ? "アカペラを止める"
-                  : "アカペラを演奏する"
-                  ),
-                  style: styleColorToggle(ref.watch(recordingFlagProvider)),
-                  onPressed: () => ref.watch(acappellaFlagProvider.notifier).switching(),
+                  child: ref.watch(acappellaFlagProvider)
+                  ? const Text("アカペラを止める")
+                  : const Text("アカペラを演奏する"),
+                  style: styleColorToggle(ref.watch(acappellaFlagProvider)),
+                  onPressed: () { 
+                    ref.watch(acappellaFlagProvider.notifier).switching();
+                  }
                 ),
                 ElevatedButton(
-                  child: Text(ref.watch(clockFlagProvider)
-                  ? "クロックを止める"
-                  : "クロックを演奏する"
-                  ),
-                  style: styleColorToggle(ref.watch(recordingFlagProvider)),
-                  onPressed: () => ref.watch(clockFlagProvider.notifier).switching()
+                  child: ref.watch(clockFlagProvider)
+                  ? const Text("クロックを止める")
+                  : const Text("クロックを演奏する"),
+                  style: styleColorToggle(ref.watch(clockFlagProvider)),
+                  onPressed: () {
+                    ref.watch(clockFlagProvider.notifier).switching();
+                  }
                 ),
                 ElevatedButton(
                   child: const Text("WAV→MIDI変換する"),
                   onPressed: () async {
-                    final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app");
+                    if (ref.watch(fileNameProvider) == "no file...") {
+                      return;
+                    }
+
+                    final formData = FormData.fromMap({
+                      'hop_length': 16 * ref.watch(countProvider),
+                      'file': await MultipartFile.fromFile(ref.watch(fileNameProvider))
+                    });
+                    
+                    // final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app/");
+                    final response = await dio.post("https://hanauta-7xlrbzh3ba-an.a.run.app/", data: formData);
+                    
                     print(response.data.toString());
+                    
                   }
                 ),
               ]
@@ -86,81 +100,3 @@ class Wav2MidiScreen extends ConsumerWidget {
     );
   }
 }
-
-/*
-  double count = 100;
-  static int sampleRate = 8000;
-  late double bpm = sampleRate*(60/4) / (16*count);
-
-  String fileName = "No Selected...";
-
-  bool tik = false;
-  late var timer = Timer.periodic(
-    Duration(milliseconds: 1000),
-    (_) {
-      if (tik) {
-        print("Tik!!!");
-      }
-    }
-  );
-
-  void incrementCounter() {
-    setState(() {
-      count++;
-      bpm = sampleRate*(60/4) / (16*count);
-    });
-  }
-
-  void decrementCounter() {
-    setState(() {
-      count--;
-      bpm = sampleRate*(60/4) / (16*count);
-    });
-  }
-
-  bool switchTik() {
-    setState(() {
-      tik = !tik;
-    });
-    return tik;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text("FileName: $fileName"),
-            Text('count: $count, BPM: $bpm'),
-            ElevatedButton(
-              child: const  Text("-"),
-              onPressed: decrementCounter
-            ),
-            ElevatedButton(
-              child: const Text("+"),
-              onPressed: incrementCounter
-            ),
-            Switch(value: false, onChanged: null),      
-            ElevatedButton(
-              child: const Text("Choose File"),
-              onPressed: () async {
-                // final result = await FilePicker.platform.pickFiles();
-              },
-            )
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-}
-*/

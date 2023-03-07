@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:core';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_hanauta/providers/file_provider.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({Key? key, required this.title}) : super(key: key);
