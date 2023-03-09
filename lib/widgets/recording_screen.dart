@@ -7,16 +7,36 @@ import 'package:flutter_hanauta/providers/flag_provider.dart';
 import 'package:flutter_hanauta/style.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
-class RecordingScreen extends ConsumerWidget {
+
+class RecordingScreen extends ConsumerStatefulWidget {
   const RecordingScreen({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  RecordingScreenState createState() => RecordingScreenState();
+}
+
+class RecordingScreenState extends ConsumerState<RecordingScreen> {
+  final FlutterSoundRecorder audioRecorder = FlutterSoundRecorder();
+
+  @override
+  void initState() {
+    super.initState();
+    audioRecorder.openRecorder();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    audioRecorder.closeRecorder();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
       ),
       body: CustomScrollView(
         slivers: [

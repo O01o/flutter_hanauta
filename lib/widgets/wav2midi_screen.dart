@@ -10,24 +10,50 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:just_audio/just_audio.dart';
+// import 'package:just_audio/just_audio.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
-class Wav2MidiScreen extends ConsumerWidget {
+class Wav2MidiScreen extends ConsumerStatefulWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
 
   final String title;
+
+  @override
+  Wav2MidiScreenState createState() => Wav2MidiScreenState();
+}
+
+class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
   final int sampleRate = 8000;
+  final FlutterSoundPlayer recordPlayer = FlutterSoundPlayer();
+  String assetPath = "";
   
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    
+    // transfer asset data to app document directory
+    /*
+    final documentPathDirectory = await ref.watch(filePathProvider.future);
+    final assetPathString = await ref.watch(assetPathProvider.future);
+    File clockSoundFile = File(assetPathString);
+    clockSoundFile.copySync(documentPathDirectory.path);
+    */
+    recordPlayer.openPlayer();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    recordPlayer.closePlayer();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dio = Dio();
-    final recordPlayer = AudioPlayer();
-    // final clockPlayer = AudioPlayer();
-    clockPlayer.setAsset("assets/sounds/clock_cut.wav");
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
       ),
       body: CustomScrollView(
         slivers: [
@@ -58,15 +84,6 @@ class Wav2MidiScreen extends ConsumerWidget {
                   max: 100,
                 ),
                 ElevatedButton(
-                  child: ref.watch(acappellaFlagProvider)
-                  ? const Text("アカペラを止める")
-                  : const Text("アカペラを演奏する"),
-                  style: styleColorToggle(ref.watch(acappellaFlagProvider)),
-                  onPressed: () { 
-                    ref.watch(acappellaFlagProvider.notifier).switching();
-                  }
-                ),
-                ElevatedButton(
                   child: ref.watch(clockFlagProvider)
                   ? const Text("クロックを止める")
                   : const Text("クロックを演奏する"),
@@ -77,9 +94,27 @@ class Wav2MidiScreen extends ConsumerWidget {
                   }
                 ),
                 ElevatedButton(
+                  child: ref.watch(acappellaFlagProvider)
+                  ? const Text("アカペラを止める")
+                  : const Text("アカペラを演奏する"),
+                  style: styleColorToggle(ref.watch(acappellaFlagProvider)),
+                  onPressed: () { 
+                    ref.watch(acappellaFlagProvider.notifier).switching();
+                    if (recordPlayer.isStopped && ref.watch(acappellaFlagProvider) && ref.watch(fileNameProvider) != "") {
+                      recordPlayer.startPlayer();
+                      print("start player!!");
+                    } else if (recordPlayer.isPlaying) {
+                      recordPlayer.stopPlayer();
+                      print("stop player!!");
+                    } else {
+                      print("not responding...");
+                    }
+                  }
+                ),
+                ElevatedButton(
                   child: const Text("WAV→MIDI変換する"),
                   onPressed: () async {
-                    if (ref.watch(fileNameProvider) == "no file...") {
+                    if (ref.watch(fileNameProvider) == "") {
                       return;
                     }
 

@@ -41,6 +41,8 @@ dependencies:
   flutter_sound: ^9.2.13
   path_provider: ^2.0.13
   just_audio: ^0.9.31
+  audio_waveforms: ^1.0.3
+  just_waveform: ^0.0.4
 
 dev_dependencies:
   flutter_test:
