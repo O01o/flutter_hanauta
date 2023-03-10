@@ -38,26 +38,28 @@ class RecordingScreenState extends ConsumerState<RecordingScreen> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                ElevatedButton(
-                  child: ref.watch(recordingFlagProvider)
-                  ? const Text("録音を止める")
-                  : const Text("録音する"),
-                  style: styleColorToggle(ref.watch(recordingFlagProvider)),
-                  onPressed: () async {
-                    ref.watch(recordingFlagProvider.notifier).switching();
-                  }
-                ),
-
-              ]
-            )
-          )
-        ],
-      )
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: CustomScrollView(
+          slivers: [
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  ElevatedButton(
+                    child: ref.watch(recordingFlagProvider)
+                    ? const Text("録音を止める")
+                    : const Text("録音する"),
+                    style: styleColorToggle(ref.watch(recordingFlagProvider)),
+                    onPressed: () async {
+                      ref.watch(recordingFlagProvider.notifier).switching();
+                    }
+                  ),
+                ]
+              )
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

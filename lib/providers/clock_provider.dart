@@ -8,18 +8,15 @@ import 'package:flutter_sound/flutter_sound.dart';
 
 int sampleRate = 8000;
 
-final clockProvider = StreamProvider.autoDispose((ref) async* {
-  FlutterSoundPlayer clockPlayer = FlutterSoundPlayer();
-  clockPlayer.openPlayer();
+final clockProvider = StreamProvider.autoDispose.family<void, FlutterSoundPlayer>((ref, clockPlayer) async* {
   String assetPath = await ref.watch(assetPathProvider.future);
   while (true) {
     int duration = 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
     await Future.delayed(Duration(milliseconds: duration));
     if (ref.watch(clockFlagProvider)) {
-      clockPlayer.startPlayer(
+      await clockPlayer.startPlayer(
         fromURI: assetPath
       );
     }
   }
-  clockPlayer.closePlayer();
 });

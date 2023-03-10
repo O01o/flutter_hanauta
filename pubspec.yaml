@@ -43,6 +43,7 @@ dependencies:
   just_audio: ^0.9.31
   audio_waveforms: ^1.0.3
   just_waveform: ^0.0.4
+  fluttertoast: ^8.2.1
 
 dev_dependencies:
   flutter_test:

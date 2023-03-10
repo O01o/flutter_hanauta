@@ -15,24 +15,27 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(title),
       ),
-      body: CustomScrollView(
-        slivers: [
-          SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                ElevatedButton(
-                  child: const Text("録音する"),
-                  onPressed: () => Navigator.pushNamed(context, "/recording")
-                ),
-                ElevatedButton(
-                  child: const Text("WAV→MIDIに変換する"),
-                  onPressed: () => Navigator.pushNamed(context, "/wav2midi")
-                )
-              ]
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: CustomScrollView(
+          slivers: [
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  ElevatedButton(
+                    child: const Text("録音する"),
+                    onPressed: () => Navigator.pushNamed(context, "/recording")
+                  ),
+                  ElevatedButton(
+                    child: const Text("WAV→MIDIに変換する"),
+                    onPressed: () => Navigator.pushNamed(context, "/wav2midi")
+                  )
+                ]
+              )
             )
-          )
-        ],
-      )
+          ],
+        ),
+      ),
     );
   }
 }
