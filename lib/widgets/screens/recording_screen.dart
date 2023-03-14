@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:core';
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_hanauta/providers/flag_provider.dart';
+import 'package:flutter_hanauta/providers/recording_providers.dart';
 import 'package:flutter_hanauta/style.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+
+import 'package:flutter_hanauta/widgets/dialogs/file_save_dialog.dart';
 
 
 class RecordingScreen extends ConsumerStatefulWidget {
@@ -51,9 +54,25 @@ class RecordingScreenState extends ConsumerState<RecordingScreen> {
                     : const Text("録音する"),
                     style: styleColorToggle(ref.watch(recordingFlagProvider)),
                     onPressed: () async {
-                      ref.watch(recordingFlagProvider.notifier).switching();
+                      if (audioRecorder.isStopped && !ref.watch(recordingFlagProvider)) {
+                        ref.watch(recordingFlagProvider.notifier).switching();
+                        audioRecorder.startRecorder();
+                        print("start recording!!");
+                      } else if (audioRecorder.isRecording && ref.watch(recordingFlagProvider)) {
+                        ref.watch(recordingFlagProvider.notifier).switching();
+                        audioRecorder.stopRecorder();
+                        showDialog(
+                          context: context, 
+                          builder: (BuildContext context) {
+                            return const FileSaveDialog();
+                          }
+                        );
+                        print("stop recording!!");
+                      } else {
+                        print("not responding...");
+                      }
                     }
-                  ),
+                  )
                 ]
               )
             ),

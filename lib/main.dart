@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'widgets/all_screens.dart';
+import 'widgets/screens/all_screens.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';

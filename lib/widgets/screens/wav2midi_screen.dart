@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'dart:core';
 import 'dart:convert';
 import 'dart:io';
+import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter_hanauta/style.dart';
 import 'package:flutter_hanauta/providers/wav2midi_providers.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 // import 'package:just_audio/just_audio.dart';
@@ -26,7 +28,7 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
   final int sampleRate = 8000;
   FlutterSoundPlayer clockPlayer = FlutterSoundPlayer();
   FlutterSoundPlayer recordPlayer = FlutterSoundPlayer();
-  String assetPath = "";
+  // String assetPath = "";
   
   @override
   void initState() {
@@ -50,22 +52,6 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
     recordPlayer.closePlayer();
   }
 
-  Stream<int> clockStream() async* {
-    int count = 0;
-    String assetPath = await ref.watch(assetPathProvider.future);
-    while (true) {
-      yield count;
-      int duration = 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
-      await Future.delayed(Duration(milliseconds: duration));
-      if (ref.watch(clockFlagProvider) && clockPlayer.isOpen()) {
-        await clockPlayer.startPlayer(
-          fromURI: assetPath
-        );
-      }
-      count++;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final dio = Dio();
@@ -86,7 +72,8 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                     child: const Text("ファイルを選択"),
                     onPressed: () async {
                       FilePickerResult? result = await FilePicker.platform.pickFiles(
-                        type: FileType.audio
+                        type: FileType.custom,
+                        allowedExtensions: ['wav']
                       );
                       if (result == null) return;
 
@@ -109,9 +96,18 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                     ? const Text("クロックを止める")
                     : const Text("クロックを演奏する"),
                     style: styleColorToggle(ref.watch(clockFlagProvider)),
-                    onPressed: () {
+                    onPressed: () async* {
+                      String assetPath = await ref.watch(assetPathProvider.future);
                       ref.watch(clockFlagProvider.notifier).switching();
-                      // clockPlayer.seek(Duration(milliseconds: 1000 * 16 * ref.watch(countProvider) ~/ sampleRate));
+                      while (true) {
+                        int duration = 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
+                        await Future.delayed(Duration(milliseconds: duration));
+                        if (ref.watch(clockFlagProvider)) {
+                          await clockPlayer.startPlayer(
+                            fromURI: assetPath
+                          );
+                        }
+                      }
                     }
                   ),
                   ElevatedButton(
@@ -173,7 +169,11 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                         }
                         final formData = FormData.fromMap({
                           'hop_length': 16 * ref.watch(countProvider),
-                          'file': await MultipartFile.fromFile(ref.watch(fileNameProvider))
+                          'file': await MultipartFile.fromFile(
+                            ref.watch(fileNameProvider),
+                            filename: ref.watch(fileNameProvider).split("/").last,
+                            contentType: MediaType.parse("audio/wav")
+                          )
                         });
                         
                         // final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app/");
@@ -181,9 +181,25 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                         
                         ref.watch(wav2midiDisableFlagProvider.notifier).switching();
 
-                        print(response.data.toString());
+                        String message = "";
+                        if (response.data.toString() == "{'your_id': 'failed to load file'}") {
+                          message = "failed to load file";
+                        } else {
+                          Directory? rootDirectory = await getExternalStorageDirectory();
+                          if (rootDirectory != null) {
+                            String saveDirectoryPath = rootDirectory.path + "/Hanauta";
+                            Directory saveDirectory = Directory(saveDirectoryPath);
+                            await saveDirectory.create(recursive: true);
+                            String saveFilePath = saveDirectoryPath + "/save.mid";
+                            final saveFile = File(saveFilePath);
+                            await saveFile.writeAsBytes(response.data);
+                            message = "save file!!";
+                          } else {
+                            message = "cannot save file...";
+                          }
+                        }
                         bool? toastFastapiResult = await Fluttertoast.showToast(
-                          msg: response.data.toString(),
+                          msg: message,
                         );
                         if (toastFastapiResult!) {
                           print("toast successfully!!");
