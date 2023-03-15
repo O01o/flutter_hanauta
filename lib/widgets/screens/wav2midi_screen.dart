@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import 'dart:core';
 import 'dart:convert';
 import 'dart:io';
@@ -96,6 +98,37 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                     ? const Text("クロックを止める")
                     : const Text("クロックを演奏する"),
                     style: styleColorToggle(ref.watch(clockFlagProvider)),
+                    onPressed: () async {
+                      final String assetFileName = "clock_cut.wav";
+                      final assetByteData = await rootBundle.load("assets/sounds/$assetFileName");
+                      final String assetPath = "${(await getApplicationDocumentsDirectory()).path}/$assetFileName";
+                      final assetFile = File(assetPath);
+                      await assetFile.writeAsBytes(assetByteData.buffer.asInt8List(assetByteData.offsetInBytes, assetByteData.lengthInBytes));
+                      print(assetPath);
+                      
+                      if (clockPlayer.isStopped && !(ref.watch(clockFlagProvider))) {
+                        ref.watch(clockFlagProvider.notifier).switching();
+                        await clockPlayer.startPlayer(
+                          fromURI: assetPath,
+                          whenFinished: () { 
+                            ref.watch(clockFlagProvider.notifier).switching();
+                            print("stop player!!");
+                          }
+                        );
+                        print("start player!!");
+                      } else if (ref.watch(clockFlagProvider)) {
+                        ref.watch(clockFlagProvider.notifier).switching();
+                        if (clockPlayer.isPlaying){
+                          await clockPlayer.stopPlayer();
+                        }
+                        print("stop player!!");
+                      } else {
+                        print("not responding...");
+                        if (clockPlayer.isStopped) print("recordPlayer clear");
+                        if (ref.watch(clockFlagProvider)) print("acapella clear");
+                      }
+                    },
+                    /*
                     onPressed: () async* {
                       String assetPath = await ref.watch(assetPathProvider.future);
                       ref.watch(clockFlagProvider.notifier).switching();
@@ -109,6 +142,7 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                         }
                       }
                     }
+                    */
                   ),
                   ElevatedButton(
                     child: ref.watch(acappellaFlagProvider)
@@ -119,7 +153,11 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                       if (recordPlayer.isStopped && !(ref.watch(acappellaFlagProvider)) && ref.watch(fileNameProvider) != "") {
                         ref.watch(acappellaFlagProvider.notifier).switching();
                         await recordPlayer.startPlayer(
-                          fromURI: ref.watch(fileNameProvider)
+                          fromURI: ref.watch(fileNameProvider),
+                          whenFinished: () { 
+                            ref.watch(acappellaFlagProvider.notifier).switching();
+                            print("stop player!!");
+                          }
                         );
                         print("start player!!");
                       } else if (recordPlayer.isPlaying && ref.watch(acappellaFlagProvider)) {
