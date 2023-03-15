@@ -30,7 +30,7 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
   final int sampleRate = 8000;
   FlutterSoundPlayer clockPlayer = FlutterSoundPlayer();
   FlutterSoundPlayer recordPlayer = FlutterSoundPlayer();
-  // String assetPath = "";
+  String assetPath = "";
   
   @override
   void initState() {
@@ -45,6 +45,31 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
     */
     clockPlayer.openPlayer();
     recordPlayer.openPlayer();
+    assetDataInit();
+  }
+
+  Future<void> assetDataInit() async {
+    final assetFileName = "clock_cut.wav";
+    final assetByteData = await rootBundle.load("assets/sounds/$assetFileName");
+    assetPath = "${(await getApplicationDocumentsDirectory()).path}/$assetFileName";
+    final assetFile = File(assetPath);
+    await assetFile.writeAsBytes(assetByteData.buffer.asInt8List(assetByteData.offsetInBytes, assetByteData.lengthInBytes));
+    print(assetPath);
+  }
+
+  Stream<int> clockPlay() async* {
+    int count = 0;
+    while (true) {
+      int duration = 4 * 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
+      await Future.delayed(Duration(milliseconds: duration));
+      if (ref.watch(clockFlagProvider)) {
+        await clockPlayer.startPlayer(
+          fromURI: assetPath
+        );
+      }
+      count++;
+      yield count;
+    }
   }
 
   @override
@@ -93,56 +118,19 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                     min: 40,
                     max: 100,
                   ),
-                  ElevatedButton(
-                    child: ref.watch(clockFlagProvider)
-                    ? const Text("クロックを止める")
-                    : const Text("クロックを演奏する"),
-                    style: styleColorToggle(ref.watch(clockFlagProvider)),
-                    onPressed: () async {
-                      final String assetFileName = "clock_cut.wav";
-                      final assetByteData = await rootBundle.load("assets/sounds/$assetFileName");
-                      final String assetPath = "${(await getApplicationDocumentsDirectory()).path}/$assetFileName";
-                      final assetFile = File(assetPath);
-                      await assetFile.writeAsBytes(assetByteData.buffer.asInt8List(assetByteData.offsetInBytes, assetByteData.lengthInBytes));
-                      print(assetPath);
-                      
-                      if (clockPlayer.isStopped && !(ref.watch(clockFlagProvider))) {
-                        ref.watch(clockFlagProvider.notifier).switching();
-                        await clockPlayer.startPlayer(
-                          fromURI: assetPath,
-                          whenFinished: () { 
-                            ref.watch(clockFlagProvider.notifier).switching();
-                            print("stop player!!");
-                          }
-                        );
-                        print("start player!!");
-                      } else if (ref.watch(clockFlagProvider)) {
-                        ref.watch(clockFlagProvider.notifier).switching();
-                        if (clockPlayer.isPlaying){
-                          await clockPlayer.stopPlayer();
-                        }
-                        print("stop player!!");
-                      } else {
-                        print("not responding...");
-                        if (clockPlayer.isStopped) print("recordPlayer clear");
-                        if (ref.watch(clockFlagProvider)) print("acapella clear");
-                      }
-                    },
-                    /*
-                    onPressed: () async* {
-                      String assetPath = await ref.watch(assetPathProvider.future);
-                      ref.watch(clockFlagProvider.notifier).switching();
-                      while (true) {
-                        int duration = 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
-                        await Future.delayed(Duration(milliseconds: duration));
-                        if (ref.watch(clockFlagProvider)) {
-                          await clockPlayer.startPlayer(
-                            fromURI: assetPath
-                          );
-                        }
-                      }
+                  StreamBuilder(
+                    stream: clockPlay(),
+                    builder: (BuildContext context, AsyncSnapshot<int> snapshot) {
+                      return ElevatedButton(
+                        child: ref.watch(clockFlagProvider)
+                        ? Text("クロックを止める")
+                        : Text("クロックを演奏する"),
+                        style: styleColorToggle(ref.watch(clockFlagProvider)),
+                        onPressed: () async {
+                          ref.watch(clockFlagProvider.notifier).switching();
+                        },
+                      );
                     }
-                    */
                   ),
                   ElevatedButton(
                     child: ref.watch(acappellaFlagProvider)
