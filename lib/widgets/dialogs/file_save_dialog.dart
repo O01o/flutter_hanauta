@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
+
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+
+import 'package:flutter_hanauta/utils/add_save_path.dart';
 
 class FileSaveDialog extends ConsumerWidget {
   const FileSaveDialog({super.key});
@@ -17,8 +22,12 @@ class FileSaveDialog extends ConsumerWidget {
         ),
         TextButton(
           child: const Text("保存する"),
-          onPressed: () {
-
+          onPressed: () async {
+            String childPath = "wav";
+            String saveFileName = "record.wav";
+            String saveFilePath = "${await saveDirectoryPath(childPath)}/$saveFileName";
+            final saveFile = File(saveFilePath);
+            // await saveFile.writeAsBytes();
           }
         )
       ],

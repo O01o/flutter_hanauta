@@ -9,6 +9,10 @@ import 'package:flutter_hanauta/style.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
 import 'package:flutter_hanauta/widgets/dialogs/file_save_dialog.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'package:flutter_hanauta/utils/add_save_path.dart';
 
 
 class RecordingScreen extends ConsumerStatefulWidget {
@@ -21,12 +25,32 @@ class RecordingScreen extends ConsumerStatefulWidget {
 }
 
 class RecordingScreenState extends ConsumerState<RecordingScreen> {
-  final FlutterSoundRecorder audioRecorder = FlutterSoundRecorder();
+  FlutterSoundRecorder audioRecorder = FlutterSoundRecorder();
+  String savePath = "";
 
   @override
   void initState() {
     super.initState();
-    audioRecorder.openRecorder();
+    recorderInit();
+  }
+
+  Future<void> recorderInit() async {
+    final microphoneStatus = await Permission.microphone.request();
+    if (microphoneStatus != PermissionStatus.granted) {
+      throw 'Microphone permission not granted';
+    }
+    
+    final cameraStatus = await Permission.camera.request();
+    if (cameraStatus != PermissionStatus.granted) {
+      throw 'Camera permission not granted';
+    }
+    
+    final storageStatus = await Permission.storage.request();
+    if (storageStatus != PermissionStatus.granted) {
+      throw 'Storage permission not granted';
+    }
+    
+    await audioRecorder.openRecorder();
   }
 
   @override
@@ -56,11 +80,15 @@ class RecordingScreenState extends ConsumerState<RecordingScreen> {
                     onPressed: () async {
                       if (audioRecorder.isStopped && !ref.watch(recordingFlagProvider)) {
                         ref.watch(recordingFlagProvider.notifier).switching();
-                        audioRecorder.startRecorder();
+                        String saveFileName = "record.wav";
+                        String saveFilePath = "${await saveDirectoryPath("wav")}/$saveFileName";
+                        await audioRecorder.startRecorder(
+                          toFile: saveFilePath
+                        );
                         print("start recording!!");
                       } else if (audioRecorder.isRecording && ref.watch(recordingFlagProvider)) {
                         ref.watch(recordingFlagProvider.notifier).switching();
-                        audioRecorder.stopRecorder();
+                        await audioRecorder.stopRecorder();
                         showDialog(
                           context: context, 
                           builder: (BuildContext context) {
@@ -70,6 +98,8 @@ class RecordingScreenState extends ConsumerState<RecordingScreen> {
                         print("stop recording!!");
                       } else {
                         print("not responding...");
+                        if (audioRecorder.isRecording) print("is recording");
+                        if (ref.watch(recordingFlagProvider)) print("flag ok");
                       }
                     }
                   )

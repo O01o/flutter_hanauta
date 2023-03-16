@@ -14,3 +14,7 @@ path_provider_android=/Users/a010/.pub-cache/hosted/pub.dev/path_provider_androi
 path_provider_foundation=/Users/a010/.pub-cache/hosted/pub.dev/path_provider_foundation-2.1.2/
 path_provider_linux=/Users/a010/.pub-cache/hosted/pub.dev/path_provider_linux-2.1.9/
 path_provider_windows=/Users/a010/.pub-cache/hosted/pub.dev/path_provider_windows-2.1.4/
+permission_handler=/Users/a010/.pub-cache/hosted/pub.dev/permission_handler-10.2.0/
+permission_handler_android=/Users/a010/.pub-cache/hosted/pub.dev/permission_handler_android-10.2.0/
+permission_handler_apple=/Users/a010/.pub-cache/hosted/pub.dev/permission_handler_apple-9.0.7/
+permission_handler_windows=/Users/a010/.pub-cache/hosted/pub.dev/permission_handler_windows-0.1.2/

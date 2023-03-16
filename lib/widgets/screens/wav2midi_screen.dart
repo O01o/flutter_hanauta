@@ -13,9 +13,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:permission_handler/permission_handler.dart';
 // import 'package:just_audio/just_audio.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+
+import 'package:flutter_hanauta/utils/add_save_path.dart';
 
 class Wav2MidiScreen extends ConsumerStatefulWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
@@ -46,6 +49,7 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
     clockPlayer.openPlayer();
     recordPlayer.openPlayer();
     assetDataInit();
+    externalStorageInit();
   }
 
   Future<void> assetDataInit() async {
@@ -55,6 +59,13 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
     final assetFile = File(assetPath);
     await assetFile.writeAsBytes(assetByteData.buffer.asInt8List(assetByteData.offsetInBytes, assetByteData.lengthInBytes));
     print(assetPath);
+  }
+
+  Future<void> externalStorageInit() async {
+    final storageStatus = await Permission.storage.request();
+    if (storageStatus != PermissionStatus.granted) {
+      throw 'Storage permission not granted';
+    }
   }
 
   Stream<int> clockPlay() async* {
@@ -211,18 +222,11 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                         if (response.data.toString() == "{'your_id': 'failed to load file'}") {
                           message = "failed to load file";
                         } else {
-                          Directory? rootDirectory = await getExternalStorageDirectory();
-                          if (rootDirectory != null) {
-                            String saveDirectoryPath = rootDirectory.path + "/Hanauta";
-                            Directory saveDirectory = Directory(saveDirectoryPath);
-                            await saveDirectory.create(recursive: true);
-                            String saveFilePath = saveDirectoryPath + "/save.mid";
-                            final saveFile = File(saveFilePath);
-                            await saveFile.writeAsBytes(response.data);
-                            message = "save file!!";
-                          } else {
-                            message = "cannot save file...";
-                          }
+                          String saveFileName = "save.mid";
+                          String saveFilePath = "${await saveDirectoryPath("midi")}/$saveFileName";
+                          final saveFile = File(saveFilePath);
+                          await saveFile.writeAsBytes(response.data);
+                          message = "save file!!";
                         }
                         bool? toastFastapiResult = await Fluttertoast.showToast(
                           msg: message,
