@@ -6,6 +6,12 @@ Flutter, FastAPI, GCP Cloud Runを使用して、歌声の音声データからM
 リクエストを受けたファイルデータ及び16分音符の演奏時間からMIDI譜面に変換するアルゴリズムはPython/FastAPI(サーバーサイド)で実行しました。  
 サーバーサイドスクリプトはDocker化し、Google Cloudにデプロイすることを目指し、発行されたURLにFlutterがリクエストを送信します。
 
+## システムの動作について
+
+- 現在、Android 13でのみで動作確認ができております。
+- 録音機能はまだ未実装です。
+- WAV2MIDI変換後、CXファイルエクスプローラー等のファイルマネージャーからメインストレージを開き、Android/data/com.example.flutter_hanauta/files/Hanauta/midiのディレクトリを開くことでMIDIファイルを確認することができます。
+
 ## アプリ実行手順
 
 ### サーバーサイド
