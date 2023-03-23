@@ -19,6 +19,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:flutter_hanauta/utils/add_save_path.dart';
+import 'package:flutter_hanauta/utils/hex_to_decimal.dart';
 
 class Wav2MidiScreen extends ConsumerStatefulWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
@@ -221,7 +222,8 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                             ref.watch(fileNameProvider),
                             filename: ref.watch(fileNameProvider).split("/").last,
                             contentType: MediaType.parse("audio/wav")
-                          )
+                          ),
+                          'return_byte': true
                         });
                         
                         // final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app/");
@@ -237,12 +239,13 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                           // String saveFileName = "aiueo.txt";
                           String saveFilePath = "${await saveDirectoryPath("midi")}/$saveFileName";
                           final saveFile = File(saveFilePath);
+                          
                           List<int> saveData = [];
                           for (String element in response.data.toString().split(" ")) {
-                            saveData.add(int.parse(element));
+                            saveData.add(hex2Decimal(element));
                           }
                           // saveFile write error
-                          await saveFile.writeAsBytes(response.data);
+                          await saveFile.writeAsBytes(saveData);
                           // await saveFile.writeAsString("sample data");
                           message = "save file!!";
                         }
