@@ -7,3 +7,10 @@ ButtonStyle styleColorToggle(bool flag) {
     : MaterialStateProperty.all(Colors.blue)
   );
 }
+
+TextStyle bigText() {
+  return const TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 20
+  );
+}

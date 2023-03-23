@@ -49,7 +49,6 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
     clockPlayer.openPlayer();
     recordPlayer.openPlayer();
     assetDataInit();
-    externalStorageInit();
   }
 
   Future<void> assetDataInit() async {
@@ -105,7 +104,10 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
             SliverList(
               delegate: SliverChildListDelegate(
                 [
-                  Text("ファイル名: ${ref.watch(fileNameProvider)}"),
+                  Text(
+                    "ファイル名: ${ref.watch(fileNameProvider).split("/").last}",
+                    textAlign: TextAlign.center,
+                  ),
                   ElevatedButton(
                     child: const Text("ファイルを選択"),
                     onPressed: () async {
@@ -118,9 +120,18 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                       ref.watch(fileNameProvider.notifier).state = result.files.single.path!;
                     }
                   ),
-                  const Spacer(),
-                  Text("BPM: ${sampleRate*(60/4) / (16*ref.watch(countProvider)) ~/ 0.01 / 100}"),
-                  Text("♬ length: ${ref.watch(countProvider)}"),
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: "♬ length: ${ref.watch(countProvider)}  "),
+                        TextSpan(
+                          text: "BPM: ${sampleRate*(60/4) / (16*ref.watch(countProvider)) ~/ 0.01 / 100}",
+                          style: bigText()
+                        )
+                      ]
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                   Slider(
                     value: ref.watch(countProvider).toDouble(), 
                     onChanged: (newRate) {
@@ -222,10 +233,17 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                         if (response.data.toString() == "{'your_id': 'failed to load file'}") {
                           message = "failed to load file";
                         } else {
-                          String saveFileName = "save.mid";
+                          String saveFileName = "${ref.watch(fileNameProvider).split("/").last.split(".").first}.mid";
+                          // String saveFileName = "aiueo.txt";
                           String saveFilePath = "${await saveDirectoryPath("midi")}/$saveFileName";
                           final saveFile = File(saveFilePath);
+                          List<int> saveData = [];
+                          for (String element in response.data.toString().split(" ")) {
+                            saveData.add(int.parse(element));
+                          }
+                          // saveFile write error
                           await saveFile.writeAsBytes(response.data);
+                          // await saveFile.writeAsString("sample data");
                           message = "save file!!";
                         }
                         bool? toastFastapiResult = await Fluttertoast.showToast(
