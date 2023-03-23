@@ -36,6 +36,3 @@ lib/widgets/screens/wav2midi_screen.dart　２３０行にある、
 final response = await dio.post("https://hanauta-7xlrbzh3ba-an.a.run.app/", data: formData);
 </pre>
 この行について、URLは各自でCloud Runにより発行されたものを使用してください。
-
-## サービスURL
-https://hanauta-7xlrbzh3ba-an.a.run.app
