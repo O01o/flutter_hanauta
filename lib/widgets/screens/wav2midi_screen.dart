@@ -222,31 +222,28 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                             ref.watch(fileNameProvider),
                             filename: ref.watch(fileNameProvider).split("/").last,
                             contentType: MediaType.parse("audio/wav")
-                          ),
-                          'return_byte': true
+                          )
                         });
                         
                         // final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app/");
-                        final response = await dio.post("https://hanauta-7xlrbzh3ba-an.a.run.app/", data: formData);
+                        final response = await dio.post(
+                          "https://hanauta-7xlrbzh3ba-an.a.run.app/wav2midi2",
+                          data: formData,
+                          options: Options(responseType: ResponseType.bytes)
+                        );
                         
                         ref.watch(wav2midiDisableFlagProvider.notifier).switching();
 
                         String message = "";
-                        if (response.data.toString() == "{'your_id': 'failed to load file'}") {
+                        // if (utf8.decode(response.data) == "{'your_id': 'failed to load file'}") {
+                        if (false) {
                           message = "failed to load file";
                         } else {
                           String saveFileName = "${ref.watch(fileNameProvider).split("/").last.split(".").first}.mid";
                           // String saveFileName = "aiueo.txt";
                           String saveFilePath = "${await saveDirectoryPath("midi")}/$saveFileName";
                           final saveFile = File(saveFilePath);
-                          
-                          List<int> saveData = [];
-                          for (String element in response.data.toString().split(" ")) {
-                            saveData.add(hex2Decimal(element));
-                          }
-                          // saveFile write error
-                          await saveFile.writeAsBytes(saveData);
-                          // await saveFile.writeAsString("sample data");
+                          await saveFile.writeAsBytes(response.data as List<int>);
                           message = "save file!!";
                         }
                         bool? toastFastapiResult = await Fluttertoast.showToast(
