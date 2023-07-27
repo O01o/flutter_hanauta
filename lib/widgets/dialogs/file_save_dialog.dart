@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter_hanauta/utils/add_save_path.dart';
 
-class FileSaveDialog extends ConsumerWidget {
+class FileSaveDialog extends HookConsumerWidget {
   const FileSaveDialog({super.key});
 
   @override
