@@ -8,93 +8,65 @@ import 'package:http_parser/http_parser.dart';
 
 import 'package:flutter_hanauta/style.dart';
 import 'package:flutter_hanauta/providers/wav2midi_providers.dart';
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:dio/dio.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:just_audio/just_audio.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:flutter_hanauta/utils/add_save_path.dart';
-import 'package:flutter_hanauta/utils/hex_to_decimal.dart';
+import 'package:flutter_hanauta/logic/asset_loader.dart';
+import 'package:flutter_hanauta/logic/env_loader.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_hanauta/logic/external_storage_init.dart';
 
-class Wav2MidiScreen extends ConsumerStatefulWidget {
-  const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
+class Wav2MidiScreen extends HookConsumerWidget {
+  Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  Wav2MidiScreenState createState() => Wav2MidiScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
 
-class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
-  final int sampleRate = 8000;
-  FlutterSoundPlayer clockPlayer = FlutterSoundPlayer();
-  FlutterSoundPlayer recordPlayer = FlutterSoundPlayer();
-  String assetPath = "";
-  
-  @override
-  void initState() {
-    super.initState();
-    clockPlayer.openPlayer();
-    recordPlayer.openPlayer();
-    assetDataInit();
-    loadEnv();
-  }
-
-  Future<void> loadEnv() async {
-    await dotenv.load();
-  }
-
-  Future<void> assetDataInit() async {
-    final assetFileName = "clock_cut.wav";
-    final assetByteData = await rootBundle.load("assets/sounds/$assetFileName");
-    assetPath = "${(await getApplicationDocumentsDirectory()).path}/$assetFileName";
-    final assetFile = File(assetPath);
-    await assetFile.writeAsBytes(assetByteData.buffer.asInt8List(assetByteData.offsetInBytes, assetByteData.lengthInBytes));
-    print(assetPath);
-  }
-
-  Future<void> externalStorageInit() async {
-    final storageStatus = await Permission.storage.request();
-    if (storageStatus != PermissionStatus.granted) {
-      throw 'Storage permission not granted';
-    }
-  }
-
-  Stream<int> clockPlay() async* {
-    int count = 0;
-    while (true) {
-      int duration = 4 * 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
-      await Future.delayed(Duration(milliseconds: duration));
-      if (ref.watch(clockFlagProvider)) {
-        await clockPlayer.startPlayer(
-          fromURI: assetPath
-        );
-      }
-      count++;
-      yield count;
-    }
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    clockPlayer.closePlayer();
-    recordPlayer.closePlayer();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+    int sampleRate = 8000;
+    String assetPath = "";
     final dio = Dio();
+    final clockPlayer = FlutterSoundPlayer();
+    final recordPlayer = FlutterSoundPlayer();
 
+    Stream<int> clockPlay() async* {
+      int count = 0;
+      while (true) {
+        int duration = 4 * 1000 * 16 * ref.watch(countProvider) ~/ sampleRate;
+        await Future.delayed(Duration(milliseconds: duration));
+        if (ref.watch(clockFlagProvider)) {
+          await clockPlayer.startPlayer(
+            fromURI: assetPath
+          );
+        }
+        count++;
+        yield count;
+      }
+    }
+    
+    useEffect(() {
+      clockPlayer.openPlayer();
+      recordPlayer.openPlayer();
+      envLoader();
+      assetLoader(assetPath);
+
+      return () {
+        clockPlayer.closePlayer();
+        recordPlayer.closePlayer();
+      };
+    }, []);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -207,11 +179,6 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                           bool? toastFileExistResult = await Fluttertoast.showToast(
                             msg: "file is not exist...",
                           );
-                          if (toastFileExistResult!) {
-                            print("toast successfully!!");
-                          } else {
-                            print("failed to toast");
-                          }
                           return;
                         }
                         final formData = FormData.fromMap({

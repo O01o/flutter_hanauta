@@ -28,8 +28,8 @@ class MyApp extends ConsumerWidget {
       initialRoute: "/",
       routes: {
         "/": (context) => const HomeScreen(title: "Home Screen"),
-        "/recording": (context) => const RecordingScreen(title: "Recording Screen"),
-        "/wav2midi": (context) => const Wav2MidiScreen(title: "WAV2MIDI Screen"),
+        "/recording": (context) => RecordingScreen(title: "Recording Screen"),
+        "/wav2midi": (context) => Wav2MidiScreen(title: "WAV2MIDI Screen"),
       },
     );
   }
