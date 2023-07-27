@@ -20,6 +20,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:flutter_hanauta/utils/add_save_path.dart';
 import 'package:flutter_hanauta/utils/hex_to_decimal.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Wav2MidiScreen extends ConsumerStatefulWidget {
   const Wav2MidiScreen({Key? key, required this.title}) : super(key: key);
@@ -39,17 +40,14 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
   @override
   void initState() {
     super.initState();
-    
-    // transfer asset data to app document directory
-    /*
-    final documentPathDirectory = await ref.watch(filePathProvider.future);
-    final assetPathString = await ref.watch(assetPathProvider.future);
-    File clockSoundFile = File(assetPathString);
-    clockSoundFile.copySync(documentPathDirectory.path);
-    */
     clockPlayer.openPlayer();
     recordPlayer.openPlayer();
     assetDataInit();
+    loadEnv();
+  }
+
+  Future<void> loadEnv() async {
+    await dotenv.load();
   }
 
   Future<void> assetDataInit() async {
@@ -225,9 +223,8 @@ class Wav2MidiScreenState extends ConsumerState<Wav2MidiScreen> {
                           )
                         });
                         
-                        // final response = await dio.get("https://hanauta-7xlrbzh3ba-an.a.run.app/");
                         final response = await dio.post(
-                          "https://hanauta-7xlrbzh3ba-an.a.run.app/wav2midi2",
+                          dotenv.env["LINK"]!,
                           data: formData,
                           options: Options(responseType: ResponseType.bytes)
                         );
