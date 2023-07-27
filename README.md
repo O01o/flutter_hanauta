@@ -37,8 +37,16 @@ OSは現状Androidのみに対応しています。Android 13に対応するSDK�
 <pre>
 flutter pub get
 </pre>
-lib/widgets/screens/wav2midi_screen.dart　２３０行にある、
+lib/widgets/screens/wav2midi_screen.dart
 <pre>
-final response = await dio.post("https://hanauta-7xlrbzh3ba-an.a.run.app/", data: formData);
+final response = await dio.post(
+  dotenv.env["LINK"]!,
+  data: formData,
+  options: Options(responseType: ResponseType.bytes)
+);
 </pre>
 この行について、URLは各自でCloud Runにより発行されたものを使用してください。
+プロジェクト内に.envファイルを作成し、以下の記述をしてください。
+<pre>
+LINK=(自分の発行したURL)
+</pre>
